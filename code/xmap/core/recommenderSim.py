@@ -195,7 +195,7 @@ class RecommenderSim:
             pair_wise = self.produce_pairwise(user_profile)
             return pair_wise.map(
                 lambda line: self.adjusted_cosine_sim(line, user_info))
-	elif "cosine_user" in self.method:
+        elif "cosine_user" in self.method:
             pair_wise = self.produce_pairwise(item_profile)
             return pair_wise.map(
                 lambda line: self.cosine_sim(line, user_info))

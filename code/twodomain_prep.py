@@ -47,7 +47,7 @@ if __name__ == '__main__':
     sqlContext = SQLContext(sc)
 
     # define parameters.
-    path_local = "/opt/spark_apps/code"
+    path_local = "/opt/spark-apps/code"
     path_para = join(path_local, "parameters.yaml")
     para = load_parameter(path_para)
 
@@ -98,7 +98,7 @@ if __name__ == '__main__':
         extendsim_tool, item2item_simRDD)
 
     # generator
-    generator_ tool = Generator(
+    generator_tool = Generator(
         para['generator']['mapping_range'],
         para['generator']['private_epsilon'],
         para['baseliner']['calculate_baseline_sim_method'],

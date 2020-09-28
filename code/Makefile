@@ -1,5 +1,5 @@
 build_package:
-	python setup.py install
+	python3 setup.py install
 
 run_demo:
 	spark-submit --master local[16] \

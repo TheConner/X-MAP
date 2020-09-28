@@ -47,7 +47,7 @@ if __name__ == '__main__':
     sqlContext = SQLContext(sc)
 
     # define parameters.
-    path_local = "/opt/spark_apps/code"
+    path_local = "/opt/spark-apps/code"
     path_para = join(path_local, "parameters.yaml")
     para = load_parameter(path_para)
     

@@ -9,7 +9,7 @@ init:
     path_music: raw/music.txt
     
     # Debug flag
-    is_debug: True
+    is_debug: False
 
     # Seed value used by BaselinerSplit
     seed: 666666
@@ -57,7 +57,7 @@ baseliner:
     #     return pairwiseItemsRDD.mapPartitions(cosine_helper)
     # elif "adjust_cosine" == self.method:
     #     return pairwiseItemsRDD.mapPartitions(adjusted_cosine_helper)
-    calculate_baseline_sim_method: adjust_cosine
+    calculate_baseline_sim_method: cosine
 
     calculate_baseline_weighting: 50
 
@@ -67,7 +67,7 @@ extender:
 
 generator: 
     # Enable or disable privacy  
-    private_flag: True
+    private_flag: False
     # mapping_range: the size of neighborhood used for mapping.
     mapping_range: 1
     # privacy_epsilon: the level of privacy
@@ -77,14 +77,14 @@ generator:
 
 recommender:
     # Allows cosine_item or adjust_cosine_item
-    calculate_xmap_sim_method: adjust_cosine_item
+    calculate_xmap_sim_method: adjust_cosine_user
     calculate_xmap_weighting: 50
     
     # mapping_range: The size of private neighborhood.
     mapping_range: 10
     
     # Enable or disable privacy
-    private_flag: True
+    private_flag: False
     
     # privacy_epsilon: The level of privacy.
     private_epsilon: 0.6

@@ -1,0 +1,35 @@
+baseliner:
+  calculate_baseline_sim_method: adjust_cosine
+  calculate_baseline_weighting: 50
+  date_from: 2012
+  date_to: 2013
+  num_atleast_rating: 5
+  num_left: 0
+  ratio_both: 0.8
+  ratio_split: 0.2
+  size_subset: 6666
+extender:
+  extend_among_topk: 10
+generator:
+  mapping_range: 1
+  private_epsilon: 0.6
+  private_flag: false
+  private_rpo: 0.1
+init:
+  is_debug: false
+  num_partition: 30
+  path_book: processed/Books.tsv
+  path_hdfs: file:/opt/spark-apps/code/data
+  path_movie: processed/Movies.tsv
+  path_music: raw/music.txt
+  seed: 666666
+recommender:
+  calculate_xmap_sim_method: adjust_cosine_user
+  calculate_xmap_weighting: 50
+  decay_alpha: 0.02
+  mapping_range: 10
+  private_epsilon: 0.6
+  private_flag: false
+  private_rpo: 0.1
+result:
+  mae: '0.686616096683'
