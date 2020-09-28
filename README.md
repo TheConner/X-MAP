@@ -1,6 +1,8 @@
 Updated to work with the newer dataset. The input format for this used to be a tab-seperated text file, the dataset is now distributed in a different format (CSV for the review subsets [link](https://nijianmo.github.io/amazon/index.html#subsets))
 
-This fork of X-MAP aims to bring compatibility with the newer datasets. Current update only works with CSV
+This fork of X-MAP aims to bring compatibility with the newer datasets. Current update only works with TSV, scripts are provided to parse the newer dataset into a friendly format
+
+I recommend looking into [this docker spark cluster](https://github.com/Spydernaz/docker-spark-cluster) for running this -- there will be some modifications needed to the dockerfiles provided in that repo, though.
 
 # X-MAP: Heterogeneous Recommendation at Large-Scale
 
