@@ -185,6 +185,8 @@ class RecommenderSim:
 
     def calculate_sim(self, item_profile, user_profile, item_info, user_info):
         """use specified method to calculate pair-pair similarity."""
+        ## In the latest update of XMAP the user methods were deleted
+        ## Re-adding them
         if "cosine_item" in self.method:
             pair_wise = self.produce_pairwise(user_profile)
             return pair_wise.map(
@@ -193,3 +195,11 @@ class RecommenderSim:
             pair_wise = self.produce_pairwise(user_profile)
             return pair_wise.map(
                 lambda line: self.adjusted_cosine_sim(line, user_info))
+	elif "cosine_user" in self.method:
+            pair_wise = self.produce_pairwise(item_profile)
+            return pair_wise.map(
+                lambda line: self.cosine_sim(line, user_info))
+        elif "adjust_cosine_user" in self.method:
+            pair_wise = self.produce_pairwise(item_profile)
+            return pair_wise.map(
+                lambda line: self.adjusted_cosine_sim(line, item_info))
