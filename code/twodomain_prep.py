@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""call different components and do two domain recommendation.
+twodomain_prep runs all of the components except for the reccomender, 
+such that all of the RDDs involved can be cached. This makes testing much 
+easier
+"""
 
 from os.path import join
 from pyspark import SparkContext, SparkConf
@@ -41,11 +47,9 @@ if __name__ == '__main__':
     sqlContext = SQLContext(sc)
 
     # define parameters.
-    path_local = "/home/tlin/notebooks"
+    path_local = "/opt/spark_apps/code"
     path_para = join(path_local, "parameters.yaml")
     para = load_parameter(path_para)
-    path_pickle_movie = join(path_local, "cache/two_domain/clean_data/movie")
-    path_pickle_book = join(path_local, "cache/two_domain/clean_data/book")
 
     path_raw_movie = join(
         para['init']['path_hdfs'], para['init']['path_movie'])
@@ -81,6 +85,34 @@ if __name__ == '__main__':
         path_raw_movie,
         para['init']['is_debug'], para['init']['num_partition'])
 
-    # Pickle these
-    sourceRDD.saveAsPickleFile(path_pickle_book)
-    targetRDD.saveAsPickleFile(path_pickle_movie)
+    trainRDD, testRDD = baseliner_split_data_pipeline(
+        sc, baseliner_splitdata_tool, sourceRDD, targetRDD)
+
+    item2item_simRDD = baseliner_calculate_sim_pipeline(
+        sc, baseliner_calculate_sim_tool, trainRDD)
+
+    # extender
+    extendsim_tool = ExtendSim(para['extender']['extend_among_topk'])
+    extendedsimRDD = extender_pipeline(
+        sc, sqlContext, baseliner_calculate_sim_tool,
+        extendsim_tool, item2item_simRDD)
+
+    # generator
+    generator_ tool = Generator(
+        para['generator']['mapping_range'],
+        para['generator']['private_epsilon'],
+        para['baseliner']['calculate_baseline_sim_method'],
+        para['generator']['private_rpo'])
+
+    alterEgo_profile = generator_pipeline(
+        generator_tool,
+        trainRDD, extendedsimRDD, para['generator']['private_flag'])
+
+    ### At this point the prep is done ###
+    # Time to serialize all the things
+    path_pickle_train = join(para['init']['path_hdfs'], "cache/traindata")
+    path_pickle_test  = join(para['init']['path_hdfs'], "cache/testdata")
+    path_pickle_alterego  = join(para['init']['path_hdfs'], "cache/alterEgo")
+
+    testRDD.saveAsPickleFile(path_pickle_test)
+    alterEgo_profile.saveAsPickleFile(path_pickle_alterego)

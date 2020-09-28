@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""call different components and do two domain recommendation."""
+"""
+call different components and do two domain recommendation.
+
+This is the full twodomain demo, for experimentations see twodomain_prep and twodomain_recommender
+"""
 
 from os.path import join
 from pyspark import SparkContext, SparkConf
@@ -43,7 +47,7 @@ if __name__ == '__main__':
     sqlContext = SQLContext(sc)
 
     # define parameters.
-    path_local = "/home/tlin/notebooks"
+    path_local = "/opt/spark_apps/code"
     path_para = join(path_local, "parameters.yaml")
     para = load_parameter(path_para)
 
