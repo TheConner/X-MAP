@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """An auxilary file for xmap."""
 import yaml
-
+import time
+from os.path import join
+from os import makedirs
 
 def baseliner_clean_data_pipeline(sc, clean_tool, path_rawdata, is_debug):
     """a pipeline to clean the data."""
@@ -52,7 +54,7 @@ def extender_pipeline(
     item2item_simDF = itemsim_tool.build_sim_DF(item2item_simRDD)
     item2item_simDF.registerTempTable("sim_table")
     BB_item_list = sqlContext.sql(
-        "SELECT DISTINCT id1 FROM sim_table WHERE label = 1").map(
+        "SELECT DISTINCT id1 FROM sim_table WHERE label = 1").rdd.map(
         lambda line: line.id1).collect()
     BB_item_bd = sc.broadcast(BB_item_list)
 
@@ -199,3 +201,17 @@ def load_parameter(path):
     """load parameter from file."""
     with open(path, 'rb') as f:
         return yaml.load(f)
+
+
+
+def write_to_disk(results, out_dict, path):
+    """write result to path."""
+    timestamp = str(int(time.time()))
+    out_folder = join(path, "runs", timestamp)
+    makedirs(out_folder)
+    out_path = join(out_folder, "info.yaml")
+
+    out_dict['result'] = results
+
+    with open(out_path, 'w')as yaml_file:
+        yaml_file.write(yaml.dump(out_dict, default_flow_style=False))

@@ -46,10 +46,17 @@ class BaselinerClean:
             splitted_line = re.split('\\s+', line)
             parsed_time = self.parse_time(splitted_line[3])
             if parsed_time.year in self.period:
+                rating=0
+                # Round rating
+                if (float(splitted_line[2]) < 2.5):
+                    rating = float(1)
+                else:
+                    rating = float(5)
+                
                 yield (
                     splitted_line[0], (
-                        self.label + splitted_line[1],
-                        float(splitted_line[2]), parsed_time))
+                        splitted_line[1] + self.label,
+                        rating, parsed_time))
 
     def parse_data(self, originalRDD):
         """parse the dataset."""

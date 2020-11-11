@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""call different components and do two domain recommendation."""
+"""
+call different components and do two domain recommendation.
+
+This is the full twodomain demo, for experimentations see twodomain_prep and twodomain_reccomender
+"""
 
 from os.path import join
 from pyspark import SparkContext, SparkConf
@@ -14,6 +18,7 @@ from xmap.core.recommenderSim import RecommenderSim
 from xmap.core.recommenderPrivacy import RecommenderPrivacy
 from xmap.core.recommenderPrediction import RecommenderPrediction
 
+from xmap.utils.assist import write_to_disk
 from xmap.utils.assist import load_parameter
 from xmap.utils.assist import baseliner_clean_data_pipeline
 from xmap.utils.assist import baseliner_split_data_pipeline
@@ -41,64 +46,29 @@ if __name__ == '__main__':
     sc = SparkContext(conf=myconf)
     sqlContext = SQLContext(sc)
 
-    # # define parameters.
+    # define parameters.
     path_local = "/opt/spark-apps/X-MAP/code"
     path_para = join(path_local, "parameters.yaml")
     para = load_parameter(path_para)
+    
+    # Locations of cached RDDs
+    path_pickle_train = join(para['init']['path_hdfs'], "cache.old/traindata")
+    path_pickle_test  = join(para['init']['path_hdfs'], "cache.old/testdata")
+    path_pickle_alterego  = join(para['init']['path_hdfs'], "cache.old/alterEgo")
 
+    
     path_raw_movie = join(
         para['init']['path_hdfs'], para['init']['path_movie'])
     path_raw_book = join(
         para['init']['path_hdfs'], para['init']['path_book'])
 
-    # baseliner
-    clean_source_tool = BaselinerClean(
-        para['baseliner']['num_atleast_rating'],
-        para['baseliner']['size_subset'],
-        para['baseliner']['date_from'],
-        para['baseliner']['date_to'], domain_label="S:")
-    clean_target_tool = BaselinerClean(
-        para['baseliner']['num_atleast_rating'],
-        para['baseliner']['size_subset'],
-        para['baseliner']['date_from'],
-        para['baseliner']['date_to'], domain_label="T:")
-    split_data_tool = BaselinerSplit(
-        para['baseliner']['num_left'],
-        para['baseliner']['ratio_split'],
-        para['baseliner']['ratio_both'],
-        para['init']['seed'])
-    itemsim_tool = BaselinerSim(
-        para['baseliner']['calculate_baseline_sim_method'],
-        para['baseliner']['calculate_baseline_weighting'])
 
-    sourceRDD = baseliner_clean_data_pipeline(
-        sc, clean_source_tool, path_raw_movie, para['init']['is_debug'])
-    targetRDD = baseliner_clean_data_pipeline(
-        sc, clean_target_tool, path_raw_book, para['init']['is_debug'])
+    ### Assume the twodomain_prep has been ran ###
 
-    trainRDD, testRDD = baseliner_split_data_pipeline(
-        sc, split_data_tool, sourceRDD, targetRDD)
-
-    item2item_simRDD = baseliner_calculate_sim_pipeline(
-        sc, itemsim_tool, trainRDD)
-
-    # extender
-    extendsim_tool = ExtendSim(para['extender']['extend_among_topk'])
-    extendedsimRDD = extender_pipeline(
-        sc, sqlContext, itemsim_tool, extendsim_tool, item2item_simRDD)
-
-    # generator
-    generator_tool = Generator(
-        para['generator']['mapping_range'],
-        para['generator']['private_epsilon'],
-        para['baseliner']['calculate_baseline_sim_method'],
-        para['generator']['private_rpo'])
-
-    alterEgo_profile = generator_pipeline(
-        generator_tool, extendedsimRDD,
-        para['generator']['private_flag'])
-
-    # recommender
+    # load data
+    testRDD = sc.pickleFile(path_pickle_test)#.cache()
+    alterEgo_profile = sc.pickleFile(path_pickle_alterego)#.cache()
+    
     recommender_sim_tool = RecommenderSim(
         para['recommender']['calculate_xmap_sim_method'],
         para['recommender']['calculate_xmap_weighting'])
@@ -117,7 +87,7 @@ if __name__ == '__main__':
             sc, recommender_sim_tool, alterEgo_profile)
 
     private_preserve_simpair = recommender_privacy_pipeline(
-        recommender_privacy_tool, recommender_sim_tool, alterEgo_sim,
+        recommender_privacy_tool, alterEgo_sim,
         para['recommender']['private_flag'])
 
     simpair_dict_bd = sc.broadcast(private_preserve_simpair.collectAsMap())
@@ -127,3 +97,11 @@ if __name__ == '__main__':
             testRDD, simpair_dict_bd,
             user_based_dict_bd, item_based_dict_bd,
             user_info_bd, item_info_bd)
+
+    
+    results = {
+        "mae": mae
+    }
+
+    write_to_disk(results, para, join(path_local, "data", "output"))
+    sc.stop()
